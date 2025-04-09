@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
+
 def icerik_cek(url):
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
@@ -9,19 +10,23 @@ def icerik_cek(url):
 
     baslik = soup.h1.get_text(strip=True)
 
-    ilk_paragraf = ""
-    tum_paragraflar = soup.find_all('p')
+    icerik = []
+    main_text = soup.find('div', {'id': 'main-text'})
 
-    for p in tum_paragraflar:
-        text = p.get_text(' ', strip=True)
-        if "AKP sıralarına kolonya şişesi" in text:
-            ilk_paragraf = text
-            break
+    if main_text:
+        first_paragraph = main_text.find('p')
+        if first_paragraph:
+            icerik.append(first_paragraph.get_text(strip=True))
 
-    diger_icerik = ' '.join(
-        [p.get_text(' ', strip=True) for p in tum_paragraflar if p.get_text(strip=True) != ilk_paragraf])
+        paragraphs = main_text.find_all('p')[1:]
+        for p in paragraphs:
+            text = p.get_text(' ', strip=True)
+            if text and text not in icerik:
+                icerik.append(text)
 
-    return f"{tarih};{baslik};{ilk_paragraf} {diger_icerik}"
+    haber = ' '.join(icerik)
+
+    return f"{tarih};{baslik};{haber}"
 
 
 if __name__ == "__main__":
